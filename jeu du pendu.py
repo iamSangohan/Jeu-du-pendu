@@ -1,11 +1,18 @@
+import sys
 from donnees import *
 from fonctions import *
+import Pyro4
+import Pyro4.util
+
+sys.excepthook = Pyro4.util.excepthook
+
+jeu = Pyro4.Proxy("PYRONAME:example.pendu")
 
 # On récupère les scores de la partie
-scores = recup_scores()
+scores = jeu.recup_scores()
 
 # On récupère un nom d'utilisateur
-utilisateur = recup_nom_utilisateur()
+utilisateur = jeu.recup_nom_utilisateur()
 
 # Si l'utilisateur n'a pas encore de score, on l'ajoute
 if utilisateur not in scores.keys():
@@ -16,13 +23,13 @@ continuer_partie = 'o'
 while continuer_partie != 'n':
     print("Joueur {0}: {1} point(s)".format(utilisateur, scores[utilisateur]))
     print("--------------------------------------------------------------------------")
-    mot_a_trouver = choisir_mot()
+    mot_a_trouver = jeu.choisir_mot()
     lettres_trouvees = []
-    mot_trouve = recup_mot_masque(mot_a_trouver, lettres_trouvees)
+    mot_trouve = jeu.recup_mot_masque(mot_a_trouver, lettres_trouvees)
     nb_chances = nb_coups
     while mot_a_trouver!=mot_trouve and nb_chances>0:
         print("Mot à trouver {0} (encore {1} chances)".format(mot_trouve, nb_chances))
-        lettre = recup_lettre()
+        lettre = jeu.recup_lettre()
         if lettre in lettres_trouvees: # La lettre a déjà été choisie
             print("Vous avez déjà choisi cette lettre.")
         elif lettre in mot_a_trouver: # La lettre est dans le mot à trouver
@@ -32,7 +39,7 @@ while continuer_partie != 'n':
         else:
             nb_chances -= 1
             print("... non, cette lettre ne se trouve pas dans le")
-        mot_trouve = recup_mot_masque(mot_a_trouver, lettres_trouvees)
+        mot_trouve = jeu.recup_mot_masque(mot_a_trouver, lettres_trouvees)
 
         # A-t-on trouvé le mot ou nos chances sont-elles épuisées ?
         if mot_a_trouver==mot_trouve:
@@ -47,10 +54,10 @@ while continuer_partie != 'n':
     continuer_partie = input("Souhaitez-vous continuer la partie (O/N) ?")
     continuer_partie = continuer_partie.lower()
 
-ajouter_mot(liste_mots)
+jeu.ajouter_mot(liste_mots)
 
 # La partie est finie, on enregistre les scores
-enregistrer_scores(scores)
+jeu.enregistrer_scores(scores)
 
 # On affiche les scores de l'utilisateur
 print("Vous finissez la partie avec {0} points.".format(scores[utilisateur]))

@@ -2,7 +2,7 @@
 On utilise les données du programme contenues dans donnees.py"""
 import os
 import pickle
-from random import choice, randrange
+from random import randrange
 from donnees import *
 import Pyro4
 

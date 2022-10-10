@@ -39,15 +39,15 @@ class Server():
 
     # Fonctions gérant les éléments saisis par l'utilisateur
 
-    def recup_nom_utilisateur(self):
+    def recup_nom_utilisateur(self, username):
         """Fonction chargée de récupérer le nom de l'utilisateur.
         Le nom de l'utilisateur doit être composé de 4 caractères minimum, chiffres et lettres exclusivement.
         Si ce nom n'est pas valide, on appelle récursivement la fonction pour en obtenir un nouveau"""
         
-        nom_utilisateur = input("Tapez votre nom: ")
+        
 
         # On met la première lettre en majuscule et les autres en minuscules
-        nom_utilisateur = nom_utilisateur.capitalize()
+        nom_utilisateur = username.capitalize()
 
         if not nom_utilisateur.isalnum() or len(nom_utilisateur)<4:
             print("Ce nom est invalide.")
@@ -57,13 +57,12 @@ class Server():
         else:
             return nom_utilisateur
 
-    def recup_lettre(self):
+    def recup_lettre(self, saisi):
 
         """Cette fonction récupère une lettre saisie par l'utilisateur. Si la chaîne récupérée n'est pas une lettre,
         on appelle récursivement la fonction jusqu'à obtenir une lettre"""
 
-        lettre = input("Tapez une lettre: ")
-        lettre = lettre.lower()
+        lettre = saisi.lower()
         if len(lettre)>1 or not lettre.isalpha():
             print("Vous n'avez pas saisi une lettre valide.")
             return self.recup_lettre()
@@ -105,12 +104,20 @@ class Server():
                 liste_mots.append(nouveau_mot)
                 
 
+# daemon = Pyro4.Daemon()                # make a Pyro daemon
+# ns = Pyro4.locateNS()                  # find the name server
+# uri = daemon.register(Server)   # register the greeting maker as a Pyro object
+# ns.register("example.server", uri)   # register the object with a name in the name server
+
+# print("Ready.")
+# daemon.requestLoop()
 def main():
+    dmn=Pyro4.Daemon(host="0.0.0.0", port=9091)
     Pyro4.Daemon.serveSimple(
-            {
-                Server: "example.pendu"
-            },
-            ns = True)
+        {Server(): 'example.pendu'}, 
+        daemon=dmn,
+        ns=False, 
+    )
 
 if __name__=="__main__":
     main()

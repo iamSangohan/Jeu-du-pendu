@@ -1,18 +1,16 @@
-import sys
 from donnees import *
-from fonctions import *
 import Pyro4
 import Pyro4.util
 
-sys.excepthook = Pyro4.util.excepthook
 
-jeu = Pyro4.Proxy("PYRONAME:example.pendu")
+jeu = Pyro4.Proxy("PYRO:example.pendu@127.0.0.1:9091")
 
 # On récupère les scores de la partie
 scores = jeu.recup_scores()
 
 # On récupère un nom d'utilisateur
-utilisateur = jeu.recup_nom_utilisateur()
+username = input("Tapez votre nom: ")
+utilisateur = jeu.recup_nom_utilisateur(username)
 
 # Si l'utilisateur n'a pas encore de score, on l'ajoute
 if utilisateur not in scores.keys():
@@ -29,7 +27,8 @@ while continuer_partie != 'n':
     nb_chances = nb_coups
     while mot_a_trouver!=mot_trouve and nb_chances>0:
         print("Mot à trouver {0} (encore {1} chances)".format(mot_trouve, nb_chances))
-        lettre = jeu.recup_lettre()
+        saisi = input("Tapez une lettre: ")
+        lettre = jeu.recup_lettre(saisi)
         if lettre in lettres_trouvees: # La lettre a déjà été choisie
             print("Vous avez déjà choisi cette lettre.")
         elif lettre in mot_a_trouver: # La lettre est dans le mot à trouver
@@ -54,7 +53,7 @@ while continuer_partie != 'n':
     continuer_partie = input("Souhaitez-vous continuer la partie (O/N) ?")
     continuer_partie = continuer_partie.lower()
 
-jeu.ajouter_mot(liste_mots)
+# jeu.ajouter_mot(liste_mots)
 
 # La partie est finie, on enregistre les scores
 jeu.enregistrer_scores(scores)

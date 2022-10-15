@@ -4,23 +4,25 @@ import Pyro4.util
 
 
 jeu = Pyro4.Proxy("PYRO:example.pendu@127.0.0.1:9091")
+joueur = Pyro4.Proxy("PYRO:example.joueur@127.0.0.1:9091")
 
 # On récupère les scores de la partie
 scores = jeu.recup_scores()
 
 # On récupère un nom d'utilisateur
 username = input("Tapez votre nom: ")
-utilisateur = jeu.recup_nom_utilisateur(username)
+utilisateur = joueur.enregistrement_joueur(username, jeu)
 
 # Si l'utilisateur n'a pas encore de score, on l'ajoute
 if utilisateur not in scores.keys():
     scores[utilisateur] = 0 # 0 point pour commencer
 
+utilisateur.score = scores[utilisateur]
+
 # Notre variable pour savoir quand arrêter la partie
 continuer_partie = 'o'
-while continuer_partie != 'n':
-    print("Joueur {0}: {1} point(s)".format(utilisateur, scores[utilisateur]))
-    print("--------------------------------------------------------------------------")
+if jeu.start() == True :
+    jeu.afficher_scores()
     mot_a_trouver = jeu.choisir_mot()
     lettres_trouvees = []
     mot_trouve = jeu.recup_mot_masque(mot_a_trouver, lettres_trouvees)

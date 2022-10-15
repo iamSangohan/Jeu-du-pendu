@@ -3,12 +3,70 @@ On utilise les données du programme contenues dans donnees.py"""
 import os
 import pickle
 from random import randrange
+import time
 from donnees import *
 import Pyro4
 
 
+class Client():
+    username = ""
+    score = 0
+    
+    def enregistrement_joueur(self, nom, jeu):
+        """Fonction chargée de récupérer le nom de l'utilisateur.
+        Le nom de l'utilisateur doit être composé de 4 caractères minimum, chiffres et lettres exclusivement.
+        Si ce nom n'est pas valide, on appelle récursivement la fonction pour en obtenir un nouveau"""
+        
+        # On met la première lettre en majuscule et les autres en minuscules
+        username = nom.capitalize()
+
+        if not username.isalnum() or len(username)<4:
+            print("Ce nom est invalide.")
+            
+            # On appelle de nouveau la fonction pour avoir un autre nom
+            return self.recup_nom_utilisateur()
+        else:
+            jeu.inscription_au_jeu()
+            jeu.attente_joueur()
+            return username
+        
+    
+    
+    
+    
+
 @Pyro4.expose
 class Server():
+    
+    joueurs = []
+    scores = []
+    gagne = []
+    
+    def start(self):
+        ok = False
+        nbjoueurs = self.joueurs.count()
+        if nbjoueurs == 3:
+            ok = True
+        return ok
+    
+    def attente_joueur(self):
+        nbjoueurs = self.joueurs.count()
+        while nbjoueurs != 3:
+            print('En attente des joueurs ({}/3)...'.format(nbjoueurs),end='\r')
+            time.sleep(1)
+        #print('Joueur {} connecté !'.format(gm.player()['name']))
+        print("Le match va commencer !")
+        
+    
+    def afficher_scores(self):
+        for joueur, score in self.joueurs, self.scores :
+            print("Joueur {0}: {1} point(s)".format(joueur, score))
+        print("--------------------------------------------------------------------------")
+    
+    
+    # def gagnant(self):
+    #     for joueur in self.joueurs :
+    
     # Gestion des scores
 
     def recup_scores(self):
@@ -39,23 +97,15 @@ class Server():
 
     # Fonctions gérant les éléments saisis par l'utilisateur
 
-    def recup_nom_utilisateur(self, username):
+    def inscription_au_jeu(self, username):
         """Fonction chargée de récupérer le nom de l'utilisateur.
         Le nom de l'utilisateur doit être composé de 4 caractères minimum, chiffres et lettres exclusivement.
         Si ce nom n'est pas valide, on appelle récursivement la fonction pour en obtenir un nouveau"""
         
-        
-
         # On met la première lettre en majuscule et les autres en minuscules
-        nom_utilisateur = username.capitalize()
-
-        if not nom_utilisateur.isalnum() or len(nom_utilisateur)<4:
-            print("Ce nom est invalide.")
-            
-            # On appelle de nouveau la fonction pour avoir un autre nom
-            return self.recup_nom_utilisateur()
-        else:
-            return nom_utilisateur
+        self.joueurs.append(username)
+        self.scores.append(0)
+        self.gagne.append(False)
 
     def recup_lettre(self, saisi):
 
@@ -71,7 +121,7 @@ class Server():
 
     # Fonctions du jeu de pendu
 
-    def choisir_mot(self): 
+    def choisir_mot(self, user): 
         """Cette fonction renvoie le mot choisi dans la liste des mots liste_mots.
         On utilise la fonction choice du module random (voir l'aide)."""
         word = randrange(len(liste_mots))
@@ -104,17 +154,16 @@ class Server():
                 liste_mots.append(nouveau_mot)
                 
 
-# daemon = Pyro4.Daemon()                # make a Pyro daemon
-# ns = Pyro4.locateNS()                  # find the name server
-# uri = daemon.register(Server)   # register the greeting maker as a Pyro object
-# ns.register("example.server", uri)   # register the object with a name in the name server
-
-# print("Ready.")
-# daemon.requestLoop()
 def main():
     dmn=Pyro4.Daemon(host="0.0.0.0", port=9091)
+    game = Server()
     Pyro4.Daemon.serveSimple(
-        {Server(): 'example.pendu'}, 
+        {game : 'example.pendu'}, 
+        daemon=dmn,
+        ns=False, 
+    )
+    Pyro4.Daemon.serveSimple(
+        {Client : 'example.joueur'}, 
         daemon=dmn,
         ns=False, 
     )
